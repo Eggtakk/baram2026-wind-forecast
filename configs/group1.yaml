@@ -1,0 +1,23 @@
+group_id: 1
+label_column: kpx_group_1
+manufacturer: vestas
+scada_file: scada_vestas_train.csv
+turbines:
+- vestas_wtg01
+- vestas_wtg02
+- vestas_wtg03
+- vestas_wtg04
+- vestas_wtg05
+- vestas_wtg06
+capacity_mw: 21.6
+capacity_kwh: 21600.0
+centroid:
+  lat: 37.2871
+  lon: 128.952
+ldaps_grids:
+- 5
+- 6
+- 10
+- 11
+gfs_grids:
+- 5

@@ -1,0 +1,22 @@
+group_id: 3
+label_column: kpx_group_3
+manufacturer: unison
+scada_file: scada_unison_train.csv
+turbines:
+- unison_wtg01
+- unison_wtg02
+- unison_wtg03
+- unison_wtg04
+- unison_wtg05
+capacity_mw: 21.0
+capacity_kwh: 21000.0
+centroid:
+  lat: 37.2752
+  lon: 128.9714
+ldaps_grids:
+- 12
+- 11
+- 7
+- 16
+gfs_grids:
+- 5
