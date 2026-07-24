@@ -12,38 +12,22 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import lightgbm as lgb
 import pandas as pd
 
-from src.features import add_default_wind_features, add_lag_rolling_features, add_time_features
+from src.features import build_baseline_features, get_feature_cols
 from src.metrics import validate_single_group
 from src.preprocess import build_group_dataset
 from src.validation import time_based_split
 
 HOLDOUT_RATIO = 0.2
 
-NON_FEATURE_COLS = {
-    "forecast_kst_dtm",
-    "ldaps_data_available_kst_dtm",
-    "y",
-    "group_id",
-}
-
-
-def make_features(df: pd.DataFrame) -> pd.DataFrame:
-    df = add_default_wind_features(df)
-    df = add_time_features(df)
-    speed_cols = [c for c in df.columns if c.endswith("_speed")]
-    df = add_lag_rolling_features(df, cols=speed_cols, lags=[1, 2, 3], windows=[3, 6, 24])
-    return df
-
 
 def run_group(group_id: int) -> dict:
     df = build_group_dataset(group_id, split="train")
-    df = make_features(df)
+    df = build_baseline_features(df)
     df = df.dropna(subset=["y"]).reset_index(drop=True)
 
     train_df, holdout_df = time_based_split(df, holdout_ratio=HOLDOUT_RATIO)
 
-    scada_cols = [c for c in df.columns if c.startswith("scada_")]
-    feature_cols = [c for c in df.columns if c not in NON_FEATURE_COLS and c not in scada_cols]
+    feature_cols = get_feature_cols(df)
 
     model = lgb.LGBMRegressor(
         n_estimators=500,

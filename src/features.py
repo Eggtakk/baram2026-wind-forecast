@@ -31,6 +31,63 @@ def add_default_wind_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+HUB_HEIGHT_M = 117.0  # info.xlsx 기준 3개 그룹 터빈 모두 동일 (Hub Height(m)=117)
+GAS_CONSTANT_DRY_AIR = 287.05  # J / (kg*K)
+DEFAULT_SHEAR_EXPONENT = 1 / 7  # 관측 높이가 하나뿐일 때 쓰는 표준 근사 지수(오픈 터레인 관례값)
+
+
+def add_physics_features(df: pd.DataFrame) -> pd.DataFrame:
+    """물리적으로 동기 부여된 파생 feature.
+
+    발전량은 대략 P ∝ rho * v_hub^3 (rho=공기밀도, v_hub=허브높이 풍속)을
+    따르므로, 관측 높이의 풍속을 허브높이(117m)로 외삽하고 공기밀도를 곁들인
+    "이론적 파워 프록시"를 넣어준다. 트리 모델은 비선형 관계를 스스로 학습할
+    수 있지만, 관측치가 부족한 구간(고풍속 등)에서는 물리 식이 외삽에 도움될
+    수 있어 시도해본다.
+    """
+    df = df.copy()
+
+    # 1) 허브높이 외삽 풍속
+    #    GFS는 10m/100m 두 높이가 있어 전단지수(shear exponent)를 직접 추정 가능.
+    if {"gfs_ws10_speed", "gfs_ws100_speed"}.issubset(df.columns):
+        v10 = df["gfs_ws10_speed"].clip(lower=0.1)
+        v100 = df["gfs_ws100_speed"].clip(lower=0.1)
+        alpha = np.log(v100 / v10) / np.log(100 / 10)
+        df["gfs_shear_exponent"] = alpha
+        df["gfs_hub_speed"] = v100 * (HUB_HEIGHT_M / 100) ** alpha
+
+    #    LDAPS는 10m만 있으므로 표준 전단지수로 단순 외삽.
+    if "ldaps_ws10_speed" in df.columns:
+        df["ldaps_hub_speed"] = df["ldaps_ws10_speed"] * (HUB_HEIGHT_M / 10) ** DEFAULT_SHEAR_EXPONENT
+
+    # 2) 공기밀도 (이상기체 근사: rho = P / (R*T))
+    if {"ldaps_surface_0_sp", "ldaps_heightAboveGround_2_t"}.issubset(df.columns):
+        df["ldaps_air_density"] = df["ldaps_surface_0_sp"] / (
+            GAS_CONSTANT_DRY_AIR * df["ldaps_heightAboveGround_2_t"]
+        )
+
+    # 3) 파워 프록시: rho * v_hub^3 (스케일은 임의, 모델이 학습으로 흡수)
+    if "ldaps_hub_speed" in df.columns and "ldaps_air_density" in df.columns:
+        df["ldaps_power_proxy"] = df["ldaps_air_density"] * df["ldaps_hub_speed"] ** 3
+    for col in ["ldaps_ws10_speed", "gfs_ws100_speed", "gfs_hub_speed"]:
+        if col in df.columns:
+            df[f"{col}_cubed"] = df[col] ** 3
+
+    # 4) LDAPS 50m 성분 변동폭 -> 돌풍/난류 프록시
+    ldaps_50m_cols = {
+        "u_max": "ldaps_heightAboveGround_50_50MUmax",
+        "u_min": "ldaps_heightAboveGround_50_50MUmin",
+        "v_max": "ldaps_heightAboveGround_50_50MVmax",
+        "v_min": "ldaps_heightAboveGround_50_50MVmin",
+    }
+    if set(ldaps_50m_cols.values()).issubset(df.columns):
+        du = df[ldaps_50m_cols["u_max"]] - df[ldaps_50m_cols["u_min"]]
+        dv = df[ldaps_50m_cols["v_max"]] - df[ldaps_50m_cols["v_min"]]
+        df["ldaps_gust_proxy_50m"] = np.sqrt(du**2 + dv**2)
+
+    return df
+
+
 def add_time_features(df: pd.DataFrame, time_col: str = "forecast_kst_dtm") -> pd.DataFrame:
     """월/시간의 계절성·일중 패턴을 반영하기 위한 캘린더 + 주기(sin/cos) feature."""
     df = df.copy()
@@ -43,6 +100,37 @@ def add_time_features(df: pd.DataFrame, time_col: str = "forecast_kst_dtm") -> p
     df["month_sin"] = np.sin(2 * np.pi * (df["month"] - 1) / 12)
     df["month_cos"] = np.cos(2 * np.pi * (df["month"] - 1) / 12)
     return df
+
+
+NON_FEATURE_COLS = {
+    "forecast_kst_dtm",
+    "ldaps_data_available_kst_dtm",
+    "y",
+    "group_id",
+}
+
+
+def build_baseline_features(df: pd.DataFrame) -> pd.DataFrame:
+    """train.py / inference.py / validate_baseline.py가 공유하는 기본 feature 레시피.
+
+    train과 inference가 서로 다른 feature 로직을 쓰면 학습-추론 불일치(스큐)가
+    생기므로, 반드시 이 함수 하나만 양쪽에서 호출한다.
+    """
+    df = add_default_wind_features(df)
+    df = add_physics_features(df)
+    df = add_time_features(df)
+    speed_cols = [c for c in df.columns if c.endswith("_speed")]
+    df = add_lag_rolling_features(df, cols=speed_cols, lags=[1, 2, 3], windows=[3, 6, 24])
+    return df
+
+
+def get_feature_cols(df: pd.DataFrame) -> list[str]:
+    """build_baseline_features() 결과에서 모델 입력으로 쓸 컬럼만 골라낸다.
+
+    scada_* 컬럼은 test 기간에 존재하지 않으므로(data_loader.py 참고) 항상 제외한다.
+    """
+    scada_cols = [c for c in df.columns if c.startswith("scada_")]
+    return [c for c in df.columns if c not in NON_FEATURE_COLS and c not in scada_cols]
 
 
 def add_lag_rolling_features(
