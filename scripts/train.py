@@ -20,6 +20,8 @@ import joblib
 import lightgbm as lgb
 
 from src.features import build_baseline_features, get_feature_cols
+from src.metrics import CAPACITY_KWH
+from src.power_curve import apply_power_curve_models, fit_power_curve_models, save_power_curve_models
 from src.preprocess import build_group_dataset
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -54,6 +56,15 @@ def train_group(group_id: int) -> dict:
     df = build_group_dataset(group_id, split="train")
     df = build_baseline_features(df)
     df = df.dropna(subset=["y"]).reset_index(drop=True)
+
+    # 경험적 파워커브(풍속->발전량 단조증가 커브) feature. 최종 제출 모델이라
+    # 전체 train으로 fit해도 누수가 아니다 (test의 y는 쓰지 않음). holdout으로
+    # 성능을 검증할 때는 scripts/validate_baseline.py처럼 train split에서만
+    # fit해야 한다.
+    capacity = CAPACITY_KWH[f"kpx_group_{group_id}"]
+    curve_models = fit_power_curve_models(df, capacity=capacity)
+    df = apply_power_curve_models(df, curve_models)
+    save_power_curve_models(curve_models, OUT_DIR / f"group{group_id}_power_curve.pkl")
 
     feature_cols = get_feature_cols(df)
     params = load_params(group_id)

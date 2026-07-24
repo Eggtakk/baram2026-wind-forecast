@@ -13,7 +13,8 @@ import lightgbm as lgb
 import pandas as pd
 
 from src.features import build_baseline_features, get_feature_cols
-from src.metrics import validate_single_group
+from src.metrics import CAPACITY_KWH, validate_single_group
+from src.power_curve import apply_power_curve_models, fit_power_curve_models
 from src.preprocess import build_group_dataset
 from src.validation import time_based_split
 
@@ -27,7 +28,13 @@ def run_group(group_id: int) -> dict:
 
     train_df, holdout_df = time_based_split(df, holdout_ratio=HOLDOUT_RATIO)
 
-    feature_cols = get_feature_cols(df)
+    # 파워커브 feature는 반드시 train split만으로 fit (holdout의 y를 보면 누수)
+    capacity = CAPACITY_KWH[f"kpx_group_{group_id}"]
+    curve_models = fit_power_curve_models(train_df, capacity=capacity)
+    train_df = apply_power_curve_models(train_df, curve_models)
+    holdout_df = apply_power_curve_models(holdout_df, curve_models)
+
+    feature_cols = get_feature_cols(train_df)
 
     model = lgb.LGBMRegressor(
         n_estimators=500,

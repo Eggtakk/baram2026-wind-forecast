@@ -129,3 +129,60 @@ def validate_single_group(
         "n_eval": n_eval,
         "n_total": len(actual),
     }
+
+
+def analyze_error_bands(
+    actual: np.ndarray,
+    forecast: np.ndarray,
+    capacity: float,
+    min_actual_ratio: float = 0.10,
+) -> dict:
+    """정격출력(설비용량) 대비 실제 발전량 구간별 오차율 분포를 분석한다.
+
+    평가 대상(actual >= min_actual_ratio * capacity)만 포함. 구간은
+    capacity_ratio(= actual/capacity)를 10%p 단위로 나눈다.
+
+    Returns
+    -------
+    dict with:
+      - "overall": {"pct_le6", "pct_6to8", "pct_over8", "mean_error_rate"}
+      - "by_capacity_band": DataFrame(index=band_label) with
+            n, mean_error_rate, pct_over8, mean_bias(=mean(forecast-actual)/capacity)
+    """
+    actual = np.asarray(actual, dtype=float)
+    forecast = np.asarray(forecast, dtype=float)
+
+    mask = actual >= min_actual_ratio * capacity
+    a, f = actual[mask], forecast[mask]
+
+    error_rate = np.abs(f - a) / capacity
+    bias = (f - a) / capacity
+    capacity_ratio = a / capacity
+
+    overall = {
+        "pct_le6": float(np.mean(error_rate <= 0.06)),
+        "pct_6to8": float(np.mean((error_rate > 0.06) & (error_rate <= 0.08))),
+        "pct_over8": float(np.mean(error_rate > 0.08)),
+        "mean_error_rate": float(np.mean(error_rate)),
+    }
+
+    edges = np.arange(0.1, 1.01, 0.1)
+    labels = [f"{int(edges[i]*100)}-{int(edges[i+1]*100)}%" for i in range(len(edges) - 1)]
+    band_idx = np.clip(np.digitize(capacity_ratio, edges[1:-1]), 0, len(labels) - 1)
+
+    rows = []
+    for i, label in enumerate(labels):
+        sel = band_idx == i
+        n = int(sel.sum())
+        rows.append(
+            {
+                "band": label,
+                "n": n,
+                "mean_error_rate": float(np.mean(error_rate[sel])) if n else np.nan,
+                "pct_over8": float(np.mean(error_rate[sel] > 0.08)) if n else np.nan,
+                "mean_bias": float(np.mean(bias[sel])) if n else np.nan,
+            }
+        )
+    by_band = pd.DataFrame(rows).set_index("band")
+
+    return {"overall": overall, "by_capacity_band": by_band}

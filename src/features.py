@@ -110,6 +110,33 @@ NON_FEATURE_COLS = {
 }
 
 
+SATURATION_WIND_COLS = ["ldaps_ws10_speed", "ldaps_hub_speed", "gfs_hub_speed", "gfs_ws100_speed"]
+SATURATION_CLIP_SPEEDS = [6, 7, 8, 9, 10, 12]  # 실측 기준 90~100% 출력대 풍속이 대략 7~9 m/s(10m 기준)였음
+
+
+def add_saturation_features(df: pd.DataFrame) -> pd.DataFrame:
+    """정격출력(파워커브 포화) 구간을 모델이 더 잘 잡도록 돕는 결정론적 feature.
+
+    발전량은 rated wind speed 이상에서는 풍속이 더 올라가도 출력이 더 안 올라가고
+    평평해지는데(포화), 원시 풍속이나 v^3 feature만으로는 트리 모델이 이 "꺾이는
+    지점"을 스스로 여러 번 분할해서 근사해야 한다. min(v, 임계값) 형태의 클리핑
+    feature를 미리 여러 임계값으로 만들어주면 그 분할을 대신 해주는 효과가 있다.
+    실측 확인 결과(그룹1: 90~100% 출력 구간 ldaps_ws10_speed 중앙값 ≈ 6.8m/s,
+    그룹3 ≈ 9.0m/s) 근처 값들로 후보를 잡았다.
+    """
+    df = df.copy()
+    for col in SATURATION_WIND_COLS:
+        if col not in df.columns:
+            continue
+        for clip in SATURATION_CLIP_SPEEDS:
+            df[f"{col}_clip{clip}"] = df[col].clip(upper=clip)
+        # 완만한 시그모이드 포화 지표 (중심 8m/s 근처 — 위 실측값들의 중간)
+        df[f"{col}_saturation"] = 1 / (1 + np.exp(-(df[col] - 8)))
+        # 임계값을 넘어선 "초과분"만 따로 (포화 이후 완만한 증가/정체를 분리해서 표현)
+        df[f"{col}_excess8"] = (df[col] - 8).clip(lower=0)
+    return df
+
+
 def build_baseline_features(df: pd.DataFrame) -> pd.DataFrame:
     """train.py / inference.py / validate_baseline.py가 공유하는 기본 feature 레시피.
 
@@ -118,6 +145,7 @@ def build_baseline_features(df: pd.DataFrame) -> pd.DataFrame:
     """
     df = add_default_wind_features(df)
     df = add_physics_features(df)
+    df = add_saturation_features(df)
     df = add_time_features(df)
     speed_cols = [c for c in df.columns if c.endswith("_speed")]
     df = add_lag_rolling_features(df, cols=speed_cols, lags=[1, 2, 3], windows=[3, 6, 24])

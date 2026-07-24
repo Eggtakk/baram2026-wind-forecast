@@ -19,6 +19,7 @@ import pandas as pd
 
 from src.data_loader import load_sample_submission
 from src.features import build_baseline_features
+from src.power_curve import apply_power_curve_models, load_power_curve_models
 from src.preprocess import build_group_dataset
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -36,6 +37,11 @@ def predict_group(group_id: int) -> pd.DataFrame:
 
     df = build_group_dataset(group_id, split="test")
     df = build_baseline_features(df)
+
+    curve_path = MODEL_DIR / f"group{group_id}_power_curve.pkl"
+    if curve_path.exists():
+        curve_models = load_power_curve_models(curve_path)
+        df = apply_power_curve_models(df, curve_models)
 
     feature_cols = model.feature_name_
     missing = [c for c in feature_cols if c not in df.columns]
