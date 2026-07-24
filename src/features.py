@@ -124,6 +124,23 @@ def build_baseline_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def build_sequence_features(df: pd.DataFrame) -> pd.DataFrame:
+    """LSTM(src/sequence_data.py)이 쓰는 feature 레시피. build_baseline_features와
+    거의 같지만 lag/rolling 파생 feature는 뺀다.
+
+    LSTM은 과거 seq_len시간을 그대로 입력으로 받으므로, LightGBM처럼 매
+    시점마다 "과거 24시간 평균/표준편차"를 미리 손으로 계산해 넣어주는 게
+    오히려 같은 정보를 창(window) 안에 여러 번 중복해서 넣는 꼴이 된다.
+    실제로 154개 feature(=lag/rolling 포함)로 학습했더니 3~8 epoch 만에
+    holdout score가 정점을 찍고 그 뒤로는 과적합으로 계속 나빠지는 문제가
+    있었다 — feature 수를 줄여(~90개) 과적합 압력을 낮추기 위한 변형이다.
+    """
+    df = add_default_wind_features(df)
+    df = add_physics_features(df)
+    df = add_time_features(df)
+    return df
+
+
 def get_feature_cols(df: pd.DataFrame) -> list[str]:
     """build_baseline_features() 결과에서 모델 입력으로 쓸 컬럼만 골라낸다.
 

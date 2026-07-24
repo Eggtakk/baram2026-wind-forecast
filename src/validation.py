@@ -6,6 +6,7 @@ split을 쓰면 미래 정보가 과거 예측에 새어 들어가 validation sc
 실제보다 낙관적으로 나온다. 항상 시간순으로 정렬한 뒤 뒤쪽 구간을
 holdout으로 떼어낸다.
 """
+import numpy as np
 import pandas as pd
 
 
@@ -24,6 +25,23 @@ def time_based_split(
     train = df.iloc[:cutoff].copy()
     holdout = df.iloc[cutoff:].copy()
     return train, holdout
+
+
+def array_time_split(
+    *arrays: np.ndarray,
+    holdout_ratio: float = 0.2,
+) -> tuple:
+    """time_based_split의 numpy 배열 버전 (LSTM 시퀀스 X/y/timestamps 등에 사용).
+
+    배열들은 이미 시간순 정렬되어 있다고 가정한다 (src/sequence_data.py의
+    build_train_sequences가 정렬된 상태로 반환함). 여러 배열을 한 번에 같은
+    지점에서 잘라준다: array_time_split(X, y, ts) -> (X_tr,y_tr,ts_tr), (X_ho,y_ho,ts_ho)
+    """
+    n = len(arrays[0])
+    cutoff = int(n * (1 - holdout_ratio))
+    train_part = tuple(a[:cutoff] for a in arrays)
+    holdout_part = tuple(a[cutoff:] for a in arrays)
+    return train_part, holdout_part
 
 
 def time_based_split_by_date(

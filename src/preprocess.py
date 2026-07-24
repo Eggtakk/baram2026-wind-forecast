@@ -45,6 +45,18 @@ def aggregate_weather_grids(df: pd.DataFrame, source: str) -> pd.DataFrame:
     if "data_available_kst_dtm" in df.columns:
         avail = df.groupby("forecast_kst_dtm")["data_available_kst_dtm"].first()
         agg["data_available_kst_dtm"] = avail
+    agg = agg.sort_index()
+
+    # 원본 예보 데이터에 드물게(관측 기준 test 기간 8,760시간 중 3시간) 결측이
+    # 있어 전체 그리드가 한꺼번에 NaN인 시각이 있다. LightGBM은 NaN을 그냥
+    # 삼키지만 LSTM 등 신경망은 NaN이 전파되어 학습/추론이 깨지므로, 여기서
+    # 시간순 ffill -> bfill로 메운다 (하루 앞뒤 값과 거의 같다고 가정 — 3시간
+    # 뿐이라 영향은 미미함).
+    n_missing = agg[value_cols].isna().any(axis=1).sum()
+    if n_missing:
+        print(f"[preprocess] {source}: 결측 {n_missing}개 시각을 ffill/bfill로 채움")
+        agg[value_cols] = agg[value_cols].ffill().bfill()
+
     agg = agg.reset_index()
 
     rename = {c: f"{source}_{c}" for c in value_cols}

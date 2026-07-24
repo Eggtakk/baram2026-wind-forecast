@@ -6,7 +6,11 @@ dependencies:
   - pandas
   - numpy
   - scikit-learn
+  - matplotlib
+  - openpyxl   # info.xlsx 로딩
+  - pyyaml     # configs/group*.yaml 로딩
   - pip
   - pip:
       - lightgbm
       - xgboost
+      - torch   # LSTM (scripts/train_lstm.py). CPU wheel이 커서(400MB+) 설치가 오래 걸릴 수 있음
