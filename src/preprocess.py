@@ -48,6 +48,8 @@ def aggregate_weather_grids(df: pd.DataFrame, source: str) -> pd.DataFrame:
     agg = agg.reset_index()
 
     rename = {c: f"{source}_{c}" for c in value_cols}
+    if "data_available_kst_dtm" in agg.columns:
+        rename["data_available_kst_dtm"] = f"{source}_data_available_kst_dtm"
     return agg.rename(columns=rename)
 
 
