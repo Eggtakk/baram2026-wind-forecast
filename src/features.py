@@ -137,14 +137,22 @@ def add_saturation_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def build_baseline_features(df: pd.DataFrame) -> pd.DataFrame:
+def build_baseline_features(df: pd.DataFrame, wind_correctors: dict | None = None) -> pd.DataFrame:
     """train.py / inference.py / validate_baseline.py가 공유하는 기본 feature 레시피.
 
     train과 inference가 서로 다른 feature 로직을 쓰면 학습-추론 불일치(스큐)가
     생기므로, 반드시 이 함수 하나만 양쪽에서 호출한다.
+
+    wind_correctors: src.wind_bias_correction.fit_wind_bias_correctors_from_raw()로
+        학습한 예보풍속 보정기(train 전용으로 fit). 주어지면 물리 feature 계산
+        직후, 포화(saturation) feature 계산 전에 허브높이 예보풍속을 보정한다.
     """
     df = add_default_wind_features(df)
     df = add_physics_features(df)
+    if wind_correctors:
+        from src.wind_bias_correction import apply_wind_bias_correction
+
+        df = apply_wind_bias_correction(df, wind_correctors)
     df = add_saturation_features(df)
     df = add_time_features(df)
     speed_cols = [c for c in df.columns if c.endswith("_speed")]
