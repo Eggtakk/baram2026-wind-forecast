@@ -39,6 +39,44 @@ feature 검증(`validate_baseline.py` 등)은 앞으로 반드시
 sample_weight 검증들도 전부 기존 결함 있는 holdout으로 측정된 것이라
 결론이 다시 뒤집힐 수 있음 — 향후 세션에서 연 단위 holdout으로 재검증 필요.
 
+## 후속: 연 단위 holdout으로 처음부터 재검증 (같은 날 이어서 진행)
+
+`scripts/tune_yearly.py`(연 단위 holdout 기준 랜덤서치, 그룹당 6회 x
+physics-only/full 두 레시피)로 재튜닝한 결과:
+
+| group | 레시피 후보 | yearly holdout 최고점 | 채택 |
+|---|---|---|---|
+| 1 | physics-only / full | 0.6091 / **0.6102** | full |
+| 2 | physics-only / full | 0.6467 / **0.6493** | full |
+| 3 | **physics-only** / full | **0.5621** / 0.5611 | physics-only |
+
+(참고: 같은 조건에서 default 파라미터 점수는 group1 0.6099, group2 0.6453,
+group3 0.5531 — 재튜닝이 group2/3에서는 명확히, group1에서는 근소하게 더 나음)
+
+그룹별로 더 높은 레시피를 채택해 `scripts/train_yearly.py`로 전체 train
+데이터(2024 포함)로 최종 재학습, `scripts/inference_yearly.py`로
+`submissions/lgbm_yearly_submission.csv` 생성 완료 (포맷 검증 통과: 8,760행,
+컬럼/순서 일치, NaN 0, 음수 0).
+
+**주의**: 이번에도 단일 연도 holdout(2024년 하나) 기준이라 이전 실패
+사례처럼 여전히 단일 시점 검증의 한계가 있을 수 있음 — 이전보다는 계절
+구성이 test와 일치해 훨씬 신뢰도가 높지만, 100% 확실한 개선을 보장하진
+않는다. 실제 제출 후 리더보드 점수로 최종 확인 필요.
+
+**실제 제출 결과(검증됨)**: `lgbm_yearly_submission.csv` 제출 후 리더보드
+점수 0.6060 → **0.60769**로 상승, 순위도 673→671. 예측했던 holdout 평균
+(~0.6072)과 실제 리더보드 점수(0.6077)가 거의 일치 — 연 단위 holdout이
+실제로 신뢰할 수 있는 검증 방법임이 확인됨.
+
+**트라이얼 확대(6→7~10회, 그룹별 시간제약에 맞춰 조정) 재탐색**: 그룹1은
+7회, 그룹2는 7회, 그룹3은 10회로 늘려 재탐색했으나 **best 파라미터/점수가
+전부 기존과 동일**하게 나옴(group1 physics 0.6091/full 0.6102, group2
+physics 0.6467/full 0.6493, group3 physics 0.5621/full 0.5611 — 변화 없음).
+현재 PARAM_GRID(3x3x3x2x2x2=216 조합) 안에서는 6~10회 랜덤서치로도 이미
+좋은 지점에 수렴한 것으로 보임. 프로덕션 모델/제출 파일은 변경 불필요.
+추가로 시도해볼 수 있는 것: PARAM_GRID 자체를 더 세밀하게(예: learning_rate
+0.01~0.1 구간을 더 촘촘히) 넓히거나, Optuna 같은 베이지안 탐색으로 전환.
+
 ---
 
 # 정격출력(90-100% capacity) 구간 오차 개선 시도 기록
