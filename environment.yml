@@ -13,4 +13,6 @@ dependencies:
   - pip:
       - lightgbm
       - xgboost
+      - catboost   # 모델 계열 블렌딩 (scripts/train_final2.py)
+      - optuna     # 연속 파라미터 베이지안 탐색 (scripts/tune_optuna.py)
       - torch   # LSTM (scripts/train_lstm.py). CPU wheel이 커서(400MB+) 설치가 오래 걸릴 수 있음

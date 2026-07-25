@@ -5,6 +5,10 @@ submissions/*.csv
 *.pt
 wandb/
 .env
+.DS_Store
+catboost_info/
+*.db
+*.db-journal
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

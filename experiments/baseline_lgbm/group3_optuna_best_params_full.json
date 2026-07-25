@@ -1,0 +1,10 @@
+{
+  "n_estimators": 150,
+  "learning_rate": 0.03822726574649208,
+  "num_leaves": 11,
+  "min_child_samples": 92,
+  "feature_fraction": 0.6293899908000085,
+  "bagging_fraction": 0.831261142176991,
+  "reg_alpha": 0.017654048052495083,
+  "reg_lambda": 0.12030178871154672
+}
