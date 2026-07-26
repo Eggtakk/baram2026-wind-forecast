@@ -1,0 +1,10 @@
+{
+  "group_id": 1,
+  "recipe": "physics",
+  "ratio": 0.2,
+  "wind_thresh": 6.0,
+  "n_flagged": 365,
+  "score": 0.6201799904059637,
+  "nmae": 0.12058319321169901,
+  "ficr": 0.36094317402362636
+}

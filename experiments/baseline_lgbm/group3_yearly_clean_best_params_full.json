@@ -1,0 +1,8 @@
+{
+  "n_estimators": 200,
+  "learning_rate": 0.08,
+  "num_leaves": 15,
+  "min_child_samples": 10,
+  "feature_fraction": 1.0,
+  "bagging_fraction": 0.8
+}
