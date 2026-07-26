@@ -463,3 +463,35 @@ DACON에 선택된 제출(`lgbm_final_submission.csv`, 2026-07-25, 총점 0.6103
 여전히 최선의 실제 성능이며 그대로 유지한다. `tune_curtailment_threshold.py`
 / `tune_yearly_clean.py`는 스크립트 자체는 남겨두되(재사용 가능한 도구),
 결과는 채택하지 않음.
+
+## 9. XGBoost/CatBoost 제대로 튜닝 후 재검증 (오늘 두 번째 시도, group2만 부분 채택)
+
+섹션 4의 "모델 계열 다양화" 실패 원인이 XGBoost/CatBoost를 기본형
+파라미터로만 썼기 때문이라는 가설을 검증. `scripts/tune_family_optuna.py`로
+LightGBM과 동일하게(연 단위 holdout + Optuna TPE) XGBoost/CatBoost도
+각각 10~19회 탐색.
+
+| group | LightGBM(기존) | XGBoost(튜닝) | CatBoost(튜닝) |
+|---|---|---|---|
+| 1 (physics) | 0.6113 | 0.6151 (+0.0038) | 0.6109 (-0.0004) |
+| 2 (full) | 0.6508 | **0.6563 (+0.0055)** | 0.6478 (-0.0030) |
+| 3 (full) | 0.5790 | 0.5786 (-0.0004) | 0.5842 (+0.0052) |
+
+`scripts/validate_model_family_tuned.py`로 튜닝된 세 모델을 다시 블렌딩
+검증한 결과, 이번엔 **블렌딩이 단일 최고 모델보다 오히려 약간 나빴다**
+(세 그룹 모두 -0.0006~-0.0008). 기본형 파라미터일 때와 결론이 정반대 —
+"모델을 섞어서 다양성을 얻는" 효과가 아니라, 그룹마다 더 잘 맞는 모델이
+따로 있고 그 모델 하나를 골라 쓰는 게 최선이었다.
+
+리스크 판단: 세 delta 모두 오늘 아침 실패한 커틀먼트 임계값 실험과
+비슷한 크기(0.004~0.006)라 단일 연도 holdout만으로는 100% 신뢰하기
+어렵다. group2의 XGBoost delta(+0.0055)가 세 그룹 중 가장 크고, group1/3
+대비 상대적으로 더 안정적으로 보여 **group2만 우선 XGBoost로 교체**하고
+group1/3은 검증된 LightGBM을 그대로 유지하기로 결정(사용자 선택).
+
+**채택**: `scripts/train_final.py`에 `MODEL_CHOICE = {1: "lightgbm",
+2: "xgboost", 3: "lightgbm"}` 추가, group2만 `group2_xgboost_optuna_best_params.json`으로
+학습. `scripts/inference_final.py`는 `model.feature_name_`(LightGBM 전용
+속성) 대신 `meta["feature_cols"]`를 쓰도록 수정(XGBoost 호환).
+`submissions/lgbm_final_submission.csv` 재생성 완료(형식/NaN/음수 검증
+통과). 아직 실제 제출은 하지 않음 — 다음 제출 시 이 파일로 검증할 것.

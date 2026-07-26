@@ -1,7 +1,8 @@
 {
   "group_id": 2,
   "recipe": "full",
-  "params_source": "yearly",
+  "model_type": "xgboost",
+  "params_source": "xgboost_optuna",
   "feature_cols": [
     "ldaps_heightAboveGround_10_10u",
     "ldaps_heightAboveGround_10_10v",
@@ -194,11 +195,13 @@
   ],
   "params": {
     "n_estimators": 600,
-    "learning_rate": 0.03,
-    "num_leaves": 15,
-    "min_child_samples": 30,
-    "feature_fraction": 0.8,
-    "bagging_fraction": 0.8
+    "learning_rate": 0.025769018043521864,
+    "max_depth": 7,
+    "subsample": 0.6398278690169473,
+    "colsample_bytree": 0.8892099937360428,
+    "min_child_weight": 17,
+    "reg_alpha": 0.08105329842586116,
+    "reg_lambda": 0.5096502392023188
   },
   "n_train_rows": 25932,
   "n_curtailment_removed": 269

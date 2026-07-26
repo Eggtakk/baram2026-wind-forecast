@@ -3,12 +3,20 @@
 
 그룹별 최종 선택(연 단위 holdout + 커틀먼트 제거 기준, 상세 근거는
 experiments/baseline_lgbm/rated_output_investigation.md):
-  group1: physics-only 레시피, 그리드 탐색 파라미터, 커틀먼트 제거    (0.6091 -> 0.6113)
-  group2: full(saturation+파워커브) 레시피, 그리드 탐색 파라미터, 커틀먼트 제거 (0.6493 -> 0.6508)
-  group3: full(saturation+파워커브) 레시피, Optuna 탐색 파라미터, 커틀먼트 제거 (0.5607 -> 0.5790)
+  group1: LightGBM, physics-only 레시피, 그리드 탐색 파라미터, 커틀먼트 제거 (0.6091 -> 0.6113)
+  group2: XGBoost(Optuna 튜닝), full(saturation+파워커브) 레시피, 커틀먼트 제거 (LightGBM 0.6508 -> XGBoost 0.6563)
+  group3: LightGBM, full(saturation+파워커브) 레시피, Optuna 탐색 파라미터, 커틀먼트 제거 (0.5607 -> 0.5790)
 
 실제 리더보드 검증 결과 0.61034 (2026-07-25 lgbm_final_submission.csv, 현재
-DACON에 선택되어 있는 제출) — 이 구성이 지금까지 확인된 최선의 실제 성능.
+DACON에 선택되어 있는 제출) — LightGBM 3그룹 구성이 지금까지 확인된 최선의
+실제 성능.
+
+group2만 XGBoost로 교체: scripts/tune_family_optuna.py로 XGBoost/CatBoost를
+LightGBM과 동등하게 Optuna 튜닝한 결과, group2는 XGBoost가 LightGBM보다
+holdout에서 뚜렷하게 우세(+0.0055, 세 그룹 중 가장 크고 안정적인 delta).
+group1(XGBoost +0.0038)/group3(CatBoost +0.0052)도 개선을 보였지만 delta가
+작아 더 위험 부담이 있다고 판단해 이번엔 group2만 우선 교체하고, group1/3은
+검증된 LightGBM 그대로 유지(상세: rated_output_investigation.md 9번 섹션).
 
 ⚠️ 커틀먼트 임계값 재탐색 + 정리된 데이터 재튜닝(2026-07-26, ratio/wind 임계값을
 낮춰 더 많이 제거 + 새 그리드 파라미터)은 연 단위 holdout에서는 그룹당
@@ -36,6 +44,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import joblib
 import lightgbm as lgb
+import xgboost as xgb
 
 from src.data_cleaning import remove_curtailment
 from src.features import (
@@ -56,6 +65,7 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 RECIPE_CHOICE = {1: "physics", 2: "full", 3: "full"}
 PARAMS_SOURCE = {1: "yearly", 2: "yearly", 3: "optuna"}
+MODEL_CHOICE = {1: "lightgbm", 2: "xgboost", 3: "lightgbm"}
 
 
 def build_physics_features(df):
@@ -70,6 +80,12 @@ def build_physics_features(df):
 def load_params(group_id: int, recipe: str) -> dict:
     source = PARAMS_SOURCE[group_id]
     path = OUT_DIR / f"group{group_id}_{source}_best_params_{recipe}.json"
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def load_xgboost_params(group_id: int) -> dict:
+    path = OUT_DIR / f"group{group_id}_xgboost_optuna_best_params.json"
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
@@ -93,10 +109,18 @@ def train_group(group_id: int) -> dict:
         save_power_curve_models(curve_models, OUT_DIR / f"group{group_id}_final_power_curve.pkl")
 
     feature_cols = get_feature_cols(feat_df)
-    params = load_params(group_id, recipe)
-    bagging_freq = 1 if params.get("bagging_fraction", 1.0) < 1.0 else 0
+    model_type = MODEL_CHOICE[group_id]
 
-    model = lgb.LGBMRegressor(**params, random_state=42, bagging_freq=bagging_freq, verbosity=-1)
+    if model_type == "xgboost":
+        params = load_xgboost_params(group_id)
+        model = xgb.XGBRegressor(**params, random_state=42, tree_method="hist", verbosity=0)
+        params_source = "xgboost_optuna"
+    else:
+        params = load_params(group_id, recipe)
+        bagging_freq = 1 if params.get("bagging_fraction", 1.0) < 1.0 else 0
+        model = lgb.LGBMRegressor(**params, random_state=42, bagging_freq=bagging_freq, verbosity=-1)
+        params_source = PARAMS_SOURCE[group_id]
+
     model.fit(feat_df[feature_cols], feat_df["y"])
 
     model_path = OUT_DIR / f"group{group_id}_final_model.pkl"
@@ -105,7 +129,8 @@ def train_group(group_id: int) -> dict:
     meta = {
         "group_id": group_id,
         "recipe": recipe,
-        "params_source": PARAMS_SOURCE[group_id],
+        "model_type": model_type,
+        "params_source": params_source,
         "feature_cols": feature_cols,
         "params": params,
         "n_train_rows": len(feat_df),

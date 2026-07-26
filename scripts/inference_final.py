@@ -62,7 +62,7 @@ def predict_group(group_id: int) -> pd.DataFrame:
             curve_models = load_power_curve_models(curve_path)
             df = apply_power_curve_models(df, curve_models)
 
-    feature_cols = model.feature_name_
+    feature_cols = meta["feature_cols"]
     missing = [c for c in feature_cols if c not in df.columns]
     if missing:
         raise ValueError(f"group{group_id}: test 데이터에 없는 학습 feature: {missing}")
