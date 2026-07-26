@@ -65,7 +65,10 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 RECIPE_CHOICE = {1: "physics", 2: "full", 3: "full"}
 PARAMS_SOURCE = {1: "yearly", 2: "yearly", 3: "optuna"}
-MODEL_CHOICE = {1: "lightgbm", 2: "xgboost", 3: "lightgbm"}
+# ⚠️ group2를 XGBoost로 교체(holdout 0.6508->0.6563)했으나 실제 제출 결과
+# 0.61034->0.60911로 하락(1-nMAE/FICR 둘 다 악화) — 기각, 전부 LightGBM으로 원복.
+# 상세: experiments/baseline_lgbm/rated_output_investigation.md 9번 섹션.
+MODEL_CHOICE = {1: "lightgbm", 2: "lightgbm", 3: "lightgbm"}
 
 
 def build_physics_features(df):

@@ -489,9 +489,27 @@ LightGBM과 동일하게(연 단위 holdout + Optuna TPE) XGBoost/CatBoost도
 대비 상대적으로 더 안정적으로 보여 **group2만 우선 XGBoost로 교체**하고
 group1/3은 검증된 LightGBM을 그대로 유지하기로 결정(사용자 선택).
 
-**채택**: `scripts/train_final.py`에 `MODEL_CHOICE = {1: "lightgbm",
-2: "xgboost", 3: "lightgbm"}` 추가, group2만 `group2_xgboost_optuna_best_params.json`으로
-학습. `scripts/inference_final.py`는 `model.feature_name_`(LightGBM 전용
-속성) 대신 `meta["feature_cols"]`를 쓰도록 수정(XGBoost 호환).
-`submissions/lgbm_final_submission.csv` 재생성 완료(형식/NaN/음수 검증
-통과). 아직 실제 제출은 하지 않음 — 다음 제출 시 이 파일로 검증할 것.
+**⚠️ 실제 제출 결과 (기각)**: group2만 XGBoost로 교체해 제출했으나, 실제
+리더보드 총점이 **0.61034 → 0.6091102303으로 하락**(1-nMAE 0.868176→
+0.867548, FICR 0.352510→0.350672 — 역시 두 지표 모두 악화). holdout에서
+group2만 가장 크고 안정적으로 보였던 delta(+0.0055)조차 실제로는
+반전됨.
+
+이걸로 오늘 같은 유형의 시도가 **세 번 연속 실패**했다(①커틀먼트 임계값
+재탐색 0.61034→0.60885, ②XGBoost 기본형 3그룹 블렌딩(전날) 0.61034→
+0.60894, ③XGBoost 튜닝 후 group2만 교체 0.61034→0.60911). 세 시도 모두
+holdout에서는 그룹당 +0.004~0.009 수준의 개선을 예측했는데 전부 실제
+리더보드에서는 하락했다. 이는 "특정 실험이 잘못됐다"기보다 **2024년
+단일 연도 holdout 자체가 이 정도 크기(<0.01)의 delta를 판별하기엔
+신뢰도가 근본적으로 부족하다**는 뜻으로 보인다 — 2024년이 착빙/커틀먼트
+이벤트가 유독 많았던 해라 2025년 test와 계절 구조는 맞아도 이상치
+패턴까지는 대표하지 못할 가능성, 그리고 DACON 리더보드 자체가 전체
+평가 데이터의 40%만 반영하는 Public Score라는 점(별도 확인됨)이 추가
+노이즈를 더했을 가능성이 있다.
+
+**최종 결정**: `scripts/train_final.py`의 `MODEL_CHOICE`를 전부
+`"lightgbm"`으로 원복. 현재 DACON에 선택된 제출(`lgbm_final_submission.csv`,
+2026-07-25, 총점 0.61034)이 여전히 최선의 실제 성능이며 그대로 유지.
+**오늘자 결론**: 단일 연도 holdout에서 <0.01 수준의 개선만 보이는
+시도는 더 이상 그날 바로 제출하지 않는다 — 여러 연도 fold나 다른
+검증 방식으로 재확인 후에만 제출 후보로 고려할 것(다음 후보 섹션 참고).
