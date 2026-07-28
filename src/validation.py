@@ -58,3 +58,43 @@ def time_based_split_by_date(
     train = df[df[time_col] < cutoff].copy()
     holdout = df[df[time_col] >= cutoff].copy()
     return train, holdout
+
+
+def _year_bounds(year: int) -> tuple[pd.Timestamp, pd.Timestamp]:
+    return pd.Timestamp(f"{year}-01-01"), pd.Timestamp(f"{year + 1}-01-01")
+
+
+def time_based_split_leave_year_out(
+    df: pd.DataFrame,
+    holdout_year: int,
+    valid_years: list[int],
+    time_col: str = "forecast_kst_dtm",
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Leave-one-year-out 분할: holdout_year 1년을 통째로 holdout으로 떼어내고,
+    valid_years 중 나머지 연도를 전부 합쳐 train으로 쓴다.
+
+    단일 연도 holdout(time_based_split_by_date)은 어느 한 해의 특이 이벤트
+    (예: 2024년에 유독 많았던 착빙/커틀먼트)에 결과가 좌우될 위험이 있다
+    (experiments/baseline_lgbm/rated_output_investigation.md 참고 — holdout에서
+    좋아 보인 개선이 실제 제출에서 3번 연속 뒤집힌 사례들). valid_years에 있는
+    연도 수만큼 폴드를 돌려 평균/표준편차를 같이 보면, 특정 연도 하나에 대한
+    과적합인지 실제로 일반화되는 개선인지 더 신뢰성 있게 판단할 수 있다.
+
+    각 연도 구간은 [1/1 00:00, 다음해 1/1 00:00) 로 자른다. valid_years에
+    없는 연도의 데이터(예: 라벨 경계에 걸친 자투리 행)는 train/holdout
+    어디에도 포함되지 않고 자동으로 제외된다.
+    """
+    df = df.sort_values(time_col).reset_index(drop=True)
+
+    ho_lo, ho_hi = _year_bounds(holdout_year)
+    holdout = df[(df[time_col] >= ho_lo) & (df[time_col] < ho_hi)].copy()
+
+    train_mask = pd.Series(False, index=df.index)
+    for year in valid_years:
+        if year == holdout_year:
+            continue
+        lo, hi = _year_bounds(year)
+        train_mask |= (df[time_col] >= lo) & (df[time_col] < hi)
+    train = df[train_mask].copy()
+
+    return train, holdout

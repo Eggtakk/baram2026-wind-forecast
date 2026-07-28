@@ -1,0 +1,56 @@
+[
+  {
+    "group_id": 1,
+    "holdout_year": 2022,
+    "score": 0.6089529919983244,
+    "ficr_stage1_only_score": 0.6116520735791338,
+    "l2_baseline_score_approx": 0.6038645341283924,
+    "threshold": 0.8,
+    "n_regime_train": 1869
+  },
+  {
+    "group_id": 1,
+    "holdout_year": 2023,
+    "score": 0.5966077595714441,
+    "ficr_stage1_only_score": 0.5932614277980347,
+    "l2_baseline_score_approx": 0.6038645341283924,
+    "threshold": 0.8,
+    "n_regime_train": 1398
+  },
+  {
+    "group_id": 1,
+    "holdout_year": 2024,
+    "score": 0.6263362938782943,
+    "ficr_stage1_only_score": 0.614423311459346,
+    "l2_baseline_score_approx": 0.6038645341283924,
+    "threshold": 0.8,
+    "n_regime_train": 1587
+  },
+  {
+    "group_id": 2,
+    "holdout_year": 2022,
+    "score": 0.6356955077005921,
+    "ficr_stage1_only_score": 0.6145989226966574,
+    "l2_baseline_score_approx": 0.6236715729981153,
+    "threshold": 0.65,
+    "n_regime_train": 3930
+  },
+  {
+    "group_id": 2,
+    "holdout_year": 2023,
+    "score": 0.6352893614675738,
+    "ficr_stage1_only_score": 0.6208855782943308,
+    "l2_baseline_score_approx": 0.6236715729981153,
+    "threshold": 0.65,
+    "n_regime_train": 4069
+  },
+  {
+    "group_id": 2,
+    "holdout_year": 2024,
+    "score": 0.6607095669151483,
+    "ficr_stage1_only_score": 0.661372755406303,
+    "l2_baseline_score_approx": 0.6236715729981153,
+    "threshold": 0.65,
+    "n_regime_train": 4293
+  }
+]

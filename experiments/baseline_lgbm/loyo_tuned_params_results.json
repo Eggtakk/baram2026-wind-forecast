@@ -1,0 +1,150 @@
+{
+  "loyo_tuned_params_candidate_folds": [
+    {
+      "group_id": 1,
+      "holdout_year": 2022,
+      "recipe": "physics",
+      "model_type": "lightgbm",
+      "params_source": "override",
+      "score": 0.619781249184016,
+      "nmae": 0.12910098632137887,
+      "one_minus_nmae": 0.8708990136786211,
+      "ficr": 0.36866348468941096,
+      "n_train": 17316,
+      "n_holdout": 8664,
+      "n_eval": 5416,
+      "n_curtailment_removed": 219
+    },
+    {
+      "group_id": 1,
+      "holdout_year": 2023,
+      "recipe": "physics",
+      "model_type": "lightgbm",
+      "params_source": "override",
+      "score": 0.5913802595909368,
+      "nmae": 0.13657683647211913,
+      "one_minus_nmae": 0.8634231635278808,
+      "ficr": 0.3193373556539927,
+      "n_train": 17246,
+      "n_holdout": 8757,
+      "n_eval": 5509,
+      "n_curtailment_removed": 196
+    },
+    {
+      "group_id": 1,
+      "holdout_year": 2024,
+      "recipe": "physics",
+      "model_type": "lightgbm",
+      "params_source": "override",
+      "score": 0.6139859057111928,
+      "nmae": 0.12053567670898942,
+      "one_minus_nmae": 0.8794643232910105,
+      "ficr": 0.3485074881313751,
+      "n_train": 17284,
+      "n_holdout": 8778,
+      "n_eval": 4989,
+      "n_curtailment_removed": 137
+    },
+    {
+      "group_id": 2,
+      "holdout_year": 2022,
+      "recipe": "full",
+      "model_type": "lightgbm",
+      "params_source": "override",
+      "score": 0.6017464736530205,
+      "nmae": 0.13286849075295235,
+      "one_minus_nmae": 0.8671315092470476,
+      "ficr": 0.3363614380589933,
+      "n_train": 17310,
+      "n_holdout": 8664,
+      "n_eval": 5440,
+      "n_curtailment_removed": 226
+    },
+    {
+      "group_id": 2,
+      "holdout_year": 2023,
+      "recipe": "full",
+      "model_type": "lightgbm",
+      "params_source": "override",
+      "score": 0.6152578339622667,
+      "nmae": 0.13409461473351375,
+      "one_minus_nmae": 0.8659053852664862,
+      "ficr": 0.3646102826580474,
+      "n_train": 17236,
+      "n_holdout": 8758,
+      "n_eval": 5474,
+      "n_curtailment_removed": 206
+    },
+    {
+      "group_id": 2,
+      "holdout_year": 2024,
+      "recipe": "full",
+      "model_type": "lightgbm",
+      "params_source": "override",
+      "score": 0.6561454135107121,
+      "nmae": 0.11979731713874074,
+      "one_minus_nmae": 0.8802026828612592,
+      "ficr": 0.4320881441601649,
+      "n_train": 17322,
+      "n_holdout": 8778,
+      "n_eval": 4976,
+      "n_curtailment_removed": 100
+    },
+    {
+      "group_id": 3,
+      "holdout_year": 2023,
+      "recipe": "full",
+      "model_type": "lightgbm",
+      "params_source": "override",
+      "score": 0.5650486076104306,
+      "nmae": 0.15623579257078685,
+      "one_minus_nmae": 0.8437642074292131,
+      "ficr": 0.28633300779164816,
+      "n_train": 8697,
+      "n_holdout": 8759,
+      "n_eval": 4847,
+      "n_curtailment_removed": 81
+    },
+    {
+      "group_id": 3,
+      "holdout_year": 2024,
+      "recipe": "full",
+      "model_type": "lightgbm",
+      "params_source": "override",
+      "score": 0.5789034379300071,
+      "nmae": 0.13622582827562896,
+      "one_minus_nmae": 0.863774171724371,
+      "ficr": 0.29403270413564325,
+      "n_train": 8595,
+      "n_holdout": 8778,
+      "n_eval": 4566,
+      "n_curtailment_removed": 164
+    }
+  ],
+  "loyo_tuned_params_candidate_summary": {
+    "1": {
+      "baseline_mean": 0.6038645341283924,
+      "baseline_std": 0.014811197302834816,
+      "candidate_mean": 0.6083824714953819,
+      "candidate_std": 0.015006762099958123,
+      "delta": 0.004517937366989577,
+      "verdict": "노이즈 수준(불확실)"
+    },
+    "2": {
+      "baseline_mean": 0.6236715729981153,
+      "baseline_std": 0.024328614383071708,
+      "candidate_mean": 0.6243832403753331,
+      "candidate_std": 0.02832429956879626,
+      "delta": 0.0007116673772178395,
+      "verdict": "노이즈 수준(불확실)"
+    },
+    "3": {
+      "baseline_mean": 0.5719760227702189,
+      "baseline_std": 0.009796844471161496,
+      "candidate_mean": 0.5719760227702189,
+      "candidate_std": 0.009796844471161496,
+      "delta": 0.0,
+      "verdict": "노이즈 수준(불확실)"
+    }
+  }
+}

@@ -32,6 +32,47 @@ from src.data_loader import (
 )
 
 
+def compute_ldaps_grid_speed_spread(
+    group_id: int,
+    split: str = "train",
+    config_dir: Path = CONFIG_DIR,
+    data_dir: Path = DATA_DIR,
+) -> pd.DataFrame:
+    """그룹의 인접 LDAPS 격자(4개)들 간 10m 풍속 공간 표준편차를 forecast_kst_dtm별로 계산.
+
+    (실험용 — 아직 build_group_dataset()/aggregate_weather_grids()의 프로덕션
+    경로에는 편입되지 않음. scripts/validate_loyo_candidates.py에서 LOYO로
+    검증 중. 검증 통과 시 aggregate_weather_grids()에 정식으로 옮길 것.)
+
+    지금 aggregate_weather_grids()는 격자 4개를 평균만 내고(1행/시각으로
+    축소) 격자 간 분산 정보는 버린다. 그룹3 EDA(experiments/group3_eda/summary.md)
+    에서 확인했듯 이 대회 터빈들은 산악 지형에 있어(야간 활강풍 등 뚜렷한
+    지형 효과) 인접 격자 간 풍속 편차가 "이 시각 예보의 지형/공간
+    불확실성"을 나타내는 신호일 수 있다는 가설.
+
+    반환: forecast_kst_dtm, ldaps_grid_speed_std (격자 간 10m 풍속의 모집단
+    표준편차, ddof=0) 두 컬럼짜리 DataFrame. train과 test 양쪽에 동일하게
+    존재하는 raw LDAPS 컬럼(heightAboveGround_10_10u/v)만 사용하므로 test
+    추론 시점에도 그대로 계산 가능하다(data leakage 없음).
+    """
+    config = load_group_config(group_id, config_dir=config_dir)
+    cols = [
+        "forecast_kst_dtm",
+        "grid_id",
+        "heightAboveGround_10_10u",
+        "heightAboveGround_10_10v",
+    ]
+    ldaps = load_weather("ldaps", split=split, grids=config["ldaps_grids"], usecols=cols, data_dir=data_dir)
+    speed = np.sqrt(ldaps["heightAboveGround_10_10u"] ** 2 + ldaps["heightAboveGround_10_10v"] ** 2)
+    spread = (
+        speed.groupby(ldaps["forecast_kst_dtm"])
+        .std(ddof=0)
+        .rename("ldaps_grid_speed_std")
+        .reset_index()
+    )
+    return spread
+
+
 def aggregate_weather_grids(df: pd.DataFrame, source: str) -> pd.DataFrame:
     """선정된 grid들을 forecast_kst_dtm 기준으로 평균내어 1행/시각으로 축소한다.
 

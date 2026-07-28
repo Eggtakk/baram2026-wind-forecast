@@ -1,0 +1,66 @@
+[
+  {
+    "group_id": 1,
+    "holdout_year": 2022,
+    "score": 0.6088629758939861,
+    "baseline_score": 0.61340002778057,
+    "threshold": 0.8,
+    "n_regime_train": 1869
+  },
+  {
+    "group_id": 1,
+    "holdout_year": 2023,
+    "score": 0.5950477736139155,
+    "baseline_score": 0.5868013679865396,
+    "threshold": 0.8,
+    "n_regime_train": 1398
+  },
+  {
+    "group_id": 1,
+    "holdout_year": 2024,
+    "score": 0.6296411688114405,
+    "baseline_score": 0.6113922066180675,
+    "threshold": 0.8,
+    "n_regime_train": 1587
+  },
+  {
+    "group_id": 2,
+    "holdout_year": 2022,
+    "score": 0.6355667961899878,
+    "baseline_score": 0.6039382141554077,
+    "threshold": 0.65,
+    "n_regime_train": 3930
+  },
+  {
+    "group_id": 2,
+    "holdout_year": 2023,
+    "score": 0.6382633436123462,
+    "baseline_score": 0.616222727899868,
+    "threshold": 0.65,
+    "n_regime_train": 4069
+  },
+  {
+    "group_id": 2,
+    "holdout_year": 2024,
+    "score": 0.662603605253733,
+    "baseline_score": 0.6508537769390701,
+    "threshold": 0.65,
+    "n_regime_train": 4293
+  },
+  {
+    "group_id": 3,
+    "holdout_year": 2023,
+    "score": 0.5738704398250434,
+    "baseline_score": 0.5650486076104306,
+    "threshold": 0.6,
+    "n_regime_train": 1611
+  },
+  {
+    "group_id": 3,
+    "holdout_year": 2024,
+    "score": 0.5970782316265633,
+    "baseline_score": 0.5789034379300071,
+    "threshold": 0.6,
+    "n_regime_train": 1602
+  }
+]

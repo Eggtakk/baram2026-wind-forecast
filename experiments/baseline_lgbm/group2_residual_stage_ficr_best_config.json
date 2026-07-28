@@ -1,0 +1,14 @@
+{
+  "threshold": 0.6,
+  "stage2_params": {
+    "n_estimators": 360,
+    "learning_rate": 0.010257651134023802,
+    "num_leaves": 27,
+    "min_child_samples": 6,
+    "feature_fraction": 0.983959162857576,
+    "bagging_fraction": 0.6510904379247652,
+    "reg_alpha": 8.707589843722637,
+    "reg_lambda": 0.48490608260891527
+  },
+  "note": "27번 섬션: FICR objective로 stage-1이 바뀌면서 regime threshold의 최적점도 0.65->0.60으로 이동(LOYO delta +0.0116->+0.0132, FICR 0.4182->0.4217, NMAE 거의 불변 0.1304->0.1307). stage2_params는 기존 oof3 튜닝값 그대로 재사용(재탐색 안 함)."
+}

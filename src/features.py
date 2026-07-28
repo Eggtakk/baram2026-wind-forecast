@@ -88,6 +88,89 @@ def add_physics_features(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def add_forecast_disagreement_features(df: pd.DataFrame) -> pd.DataFrame:
+    """LDAPS와 GFS, 두 예보 소스 간 불일치(disagreement)를 feature로 추가.
+
+    (실험용 — 아직 프로덕션 레시피(build_physics_features/build_baseline_features)에는
+    포함되지 않음. scripts/validate_loyo_candidates.py에서 LOYO로 검증 중.
+    검증 통과 시 build_physics_features/build_baseline_features에 편입할 것.)
+
+    근거: `scripts/analyze_forecast_accuracy.py` 결과, 정격출력 구간으로 갈수록
+    예보풍속의 MAE/분산이 뚜렷하게 커진다(예: group1 gfs_hub_speed MAE가
+    0-10% 출력구간 1.8m/s -> 90-100% 구간 6.8~7.4m/s로 증가,
+    rated_output_investigation.md 4번 섹션 참고). "지금 이 시각 예보가
+    얼마나 불확실한가"를 모델이 직접 참고할 수 있는 신호를 주면, 불확실성이
+    큰 시간대를 다르게 다루는 법을 학습할 여지가 생긴다는 가설.
+
+    이전에 시도했던 "예보풍속 자체를 실측 기준으로 보정"(5번 섹션, 기각)과는
+    질적으로 다르다 — 트리 기반 모델은 개별 feature의 단조(monotonic)
+    변환에는 사실상 불변이라 그 보정은 추가 정보가 거의 없었지만, 두 예보
+    소스의 차이(disagreement)는 원본 feature들의 비단조 조합(interaction)이라
+    트리가 기존 feature만으로 스스로 만들어낼 수 없는 새로운 정보다.
+    """
+    df = df.copy()
+    if {"ldaps_hub_speed", "gfs_hub_speed"}.issubset(df.columns):
+        df["hub_speed_disagreement"] = (df["ldaps_hub_speed"] - df["gfs_hub_speed"]).abs()
+    if {"ldaps_ws10_speed", "gfs_ws10_speed"}.issubset(df.columns):
+        df["ws10_speed_disagreement"] = (df["ldaps_ws10_speed"] - df["gfs_ws10_speed"]).abs()
+    if {"ldaps_ws10_dir", "gfs_ws10_dir"}.issubset(df.columns):
+        # 풍향은 원형(circular) 변수라 단순 차가 아니라 0~180도 범위로 감아준다.
+        diff = (df["ldaps_ws10_dir"] - df["gfs_ws10_dir"]).abs() % 360
+        df["ws10_dir_disagreement"] = np.minimum(diff, 360 - diff)
+    return df
+
+
+def add_manufacturer_power_curve_feature(df: pd.DataFrame, group_id: int) -> pd.DataFrame:
+    """터빈 제작사 공식 파워커브(외부 공개 데이터) 기반 발전량 추정 feature.
+
+    (실험용 — 아직 프로덕션 레시피에는 편입되지 않음. src/manufacturer_power_curve.py
+    상단 docstring에 출처/재현성 설명, docs/external_data_manufacturer_power_curve.md
+    참고. scripts/validate_loyo_candidates.py "manufacturer_curve" 후보로 LOYO 검증 중.)
+
+    기존 `src/power_curve.py`의 isotonic 커브는 이 대회의 train 데이터(풍속-발전량)
+    자체에서 통계적으로 학습한 것이라, train에 없는 극단적 고풍속 구간에서는
+    외삽(extrapolation)에 의존한다. 이 feature는 반대로 터빈 제작사가 공개한
+    실제 설계 파워커브를 그대로 조회하는 것이라, train 데이터의 분포와 무관하게
+    물리적으로 타당한 값을 준다 — 특히 정격출력(rated) 부근 오차가 가장 컸던
+    문제(rated_output_investigation.md 1~4번 섹션)에 직접 도움이 될 수 있다는
+    가설.
+    """
+    df = df.copy()
+    if not {"ldaps_hub_speed", "ldaps_air_density"}.issubset(df.columns):
+        return df
+    from src.manufacturer_power_curve import TURBINE_BY_GROUP, estimate_power_kw
+
+    turbine = TURBINE_BY_GROUP[group_id]
+    df["manufacturer_curve_est"] = estimate_power_kw(
+        df["ldaps_hub_speed"], df["ldaps_air_density"], turbine
+    )
+    return df
+
+
+def add_wind_direction_cyclical_features(df: pd.DataFrame) -> pd.DataFrame:
+    """`*_dir`(0~360도, 원형 변수) 컬럼들에 sin/cos 인코딩을 추가.
+
+    (실험용 — 아직 프로덕션 레시피에는 편입되지 않음. add_forecast_disagreement_features와
+    같은 방식으로 scripts/validate_loyo_candidates.py에서 LOYO로 검증 중.)
+
+    현재 add_default_wind_features()가 만드는 `*_dir` 컬럼들은 0~360도의
+    raw 각도 그대로다. 트리 모델은 이 값 자체가 아니라 분할 임계값을
+    학습하므로 359도와 1도가 물리적으로는 거의 같은 방향이라는 걸 표현하려면
+    "> 350 또는 < 10" 같은 분할을 여러 겹 겹쳐야 한다 — sin/cos로 인코딩하면
+    이 wrap-around를 좌표 하나로 바로 표현할 수 있다. 산악 지형 풍력단지라
+    지형 채널링/웨이크 효과로 풍향 자체가 의미 있는 신호일 가능성이 있는데
+    (group3 EDA의 야간 활강풍 패턴 참고), 지금은 raw 각도로만 들어가 있어
+    이 정보를 모델이 비효율적으로만 활용하고 있을 수 있다.
+    """
+    df = df.copy()
+    dir_cols = [c for c in df.columns if c.endswith("_dir")]
+    for col in dir_cols:
+        rad = np.deg2rad(df[col])
+        df[f"{col}_sin"] = np.sin(rad)
+        df[f"{col}_cos"] = np.cos(rad)
+    return df
+
+
 def add_time_features(df: pd.DataFrame, time_col: str = "forecast_kst_dtm") -> pd.DataFrame:
     """월/시간의 계절성·일중 패턴을 반영하기 위한 캘린더 + 주기(sin/cos) feature."""
     df = df.copy()

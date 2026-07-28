@@ -1,0 +1,98 @@
+[
+  {
+    "group_id": 1,
+    "holdout_year": 2024,
+    "recipe": "physics",
+    "score": 0.6278357309710203,
+    "baseline_score": 0.6113922066180675,
+    "stage2_used": true,
+    "n_regime_train": 1587,
+    "n_regime_holdout": 390,
+    "n_train": 17284,
+    "n_holdout": 8778
+  },
+  {
+    "group_id": 1,
+    "holdout_year": 2022,
+    "recipe": "physics",
+    "score": 0.60655764833041,
+    "baseline_score": 0.61340002778057,
+    "stage2_used": true,
+    "n_regime_train": 1869,
+    "n_regime_holdout": 551,
+    "n_train": 17316,
+    "n_holdout": 8664
+  },
+  {
+    "group_id": 1,
+    "holdout_year": 2023,
+    "recipe": "physics",
+    "score": 0.5929793127268861,
+    "baseline_score": 0.5868013679865396,
+    "stage2_used": true,
+    "n_regime_train": 1398,
+    "n_regime_holdout": 444,
+    "n_train": 17246,
+    "n_holdout": 8757
+  },
+  {
+    "group_id": 2,
+    "holdout_year": 2024,
+    "recipe": "full",
+    "score": 0.6561703708406422,
+    "baseline_score": 0.6508537769390701,
+    "stage2_used": true,
+    "n_regime_train": 2511,
+    "n_regime_holdout": 812,
+    "n_train": 17322,
+    "n_holdout": 8778
+  },
+  {
+    "group_id": 2,
+    "holdout_year": 2022,
+    "recipe": "full",
+    "score": 0.6127024049748733,
+    "baseline_score": 0.6039382141554077,
+    "stage2_used": true,
+    "n_regime_train": 2143,
+    "n_regime_holdout": 619,
+    "n_train": 17310,
+    "n_holdout": 8664
+  },
+  {
+    "group_id": 2,
+    "holdout_year": 2023,
+    "recipe": "full",
+    "score": 0.6257671733372014,
+    "baseline_score": 0.616222727899868,
+    "stage2_used": true,
+    "n_regime_train": 2274,
+    "n_regime_holdout": 803,
+    "n_train": 17236,
+    "n_holdout": 8758
+  },
+  {
+    "group_id": 3,
+    "holdout_year": 2024,
+    "recipe": "full",
+    "score": 0.582460815417694,
+    "baseline_score": 0.5789034379300071,
+    "stage2_used": true,
+    "n_regime_train": 702,
+    "n_regime_holdout": 103,
+    "n_train": 8595,
+    "n_holdout": 8778
+  },
+  {
+    "group_id": 3,
+    "holdout_year": 2023,
+    "recipe": "full",
+    "score": 0.5624626942291335,
+    "baseline_score": 0.5650486076104306,
+    "stage2_used": true,
+    "n_regime_train": 712,
+    "n_regime_holdout": 359,
+    "n_train": 8697,
+    "n_holdout": 8759
+  }
+]

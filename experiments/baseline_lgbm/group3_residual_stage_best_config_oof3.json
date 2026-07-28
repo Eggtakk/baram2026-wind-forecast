@@ -1,0 +1,13 @@
+{
+  "threshold": 0.6,
+  "stage2_params": {
+    "n_estimators": 30,
+    "learning_rate": 0.020959180721599274,
+    "num_leaves": 3,
+    "min_child_samples": 77,
+    "feature_fraction": 0.43457766615996896,
+    "bagging_fraction": 0.7054670649649164,
+    "reg_alpha": 0.04001540858919569,
+    "reg_lambda": 0.07696982402483055
+  }
+}
