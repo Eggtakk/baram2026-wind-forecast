@@ -1,0 +1,66 @@
+[
+  {
+    "group_id": 1,
+    "holdout_year": 2022,
+    "score": 0.5943843669700666,
+    "quantile_stage1_only_score": 0.6045410614928126,
+    "threshold": 0.8,
+    "n_regime_train": 1869
+  },
+  {
+    "group_id": 1,
+    "holdout_year": 2023,
+    "score": 0.6137472336405221,
+    "quantile_stage1_only_score": 0.6046843797622935,
+    "threshold": 0.8,
+    "n_regime_train": 1398
+  },
+  {
+    "group_id": 1,
+    "holdout_year": 2024,
+    "score": 0.6505333561919067,
+    "quantile_stage1_only_score": 0.6323930856554165,
+    "threshold": 0.8,
+    "n_regime_train": 1587
+  },
+  {
+    "group_id": 2,
+    "holdout_year": 2022,
+    "score": 0.6482046930411035,
+    "quantile_stage1_only_score": 0.6370986499230484,
+    "threshold": 0.75,
+    "n_regime_train": 2795
+  },
+  {
+    "group_id": 2,
+    "holdout_year": 2023,
+    "score": 0.6408564804954722,
+    "quantile_stage1_only_score": 0.6394665637719026,
+    "threshold": 0.75,
+    "n_regime_train": 2979
+  },
+  {
+    "group_id": 2,
+    "holdout_year": 2024,
+    "score": 0.6584054095674503,
+    "quantile_stage1_only_score": 0.6639137653150939,
+    "threshold": 0.75,
+    "n_regime_train": 3192
+  },
+  {
+    "group_id": 3,
+    "holdout_year": 2023,
+    "score": 0.5761582714571056,
+    "quantile_stage1_only_score": 0.5768639388004272,
+    "threshold": 0.8,
+    "n_regime_train": 712
+  },
+  {
+    "group_id": 3,
+    "holdout_year": 2024,
+    "score": 0.602286880145869,
+    "quantile_stage1_only_score": 0.5877590323691839,
+    "threshold": 0.8,
+    "n_regime_train": 702
+  }
+]

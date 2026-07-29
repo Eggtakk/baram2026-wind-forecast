@@ -98,3 +98,50 @@ def time_based_split_leave_year_out(
     train = df[train_mask].copy()
 
     return train, holdout
+
+
+def _quarter_bounds(year: int, quarter: int) -> tuple[pd.Timestamp, pd.Timestamp]:
+    start_month = 3 * (quarter - 1) + 1
+    start = pd.Timestamp(year=year, month=start_month, day=1)
+    if quarter == 4:
+        end = pd.Timestamp(year=year + 1, month=1, day=1)
+    else:
+        end = pd.Timestamp(year=year, month=start_month + 3, day=1)
+    return start, end
+
+
+def time_based_split_leave_quarter_out(
+    df: pd.DataFrame,
+    holdout_quarter: tuple[int, int],
+    valid_quarters: list[tuple[int, int]],
+    time_col: str = "forecast_kst_dtm",
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Leave-one-quarter-out 분할: (year, quarter) 튜플로 지정한 분기 하나를
+    통째로 holdout으로 떼어내고, valid_quarters 중 나머지 분기를 (연도 경계를
+    걸쳐) 전부 합쳐 train으로 쓴다.
+
+    leave-one-year-out(연도 전체를 통째로 떼어냄, 3(2)-fold뿐)보다 fold 수를
+    최대 12(group3는 8)까지 늘려 "진짜 재학습된" 독립적인 검증 지점을 더
+    많이 얻기 위한 것 — 단, 각 fold의 train이 "이전 연도 전체"가 아니라
+    "다른 연도들 + 같은 연도의 다른 분기들"이 섞인 형태가 되어, 실제
+    프로덕션(이전 연도 전체로 학습해 다음 연도를 예측)과는 학습 데이터
+    구성 방식이 달라진다는 trade-off가 있다(experiments/baseline_lgbm/
+    rated_output_investigation.md 38번 섹션 참고).
+
+    holdout_quarter/valid_quarters의 각 원소는 (year, quarter) — quarter는
+    1~4(1=1~3월, 2=4~6월, 3=7~9월, 4=10~12월).
+    """
+    df = df.sort_values(time_col).reset_index(drop=True)
+
+    ho_lo, ho_hi = _quarter_bounds(*holdout_quarter)
+    holdout = df[(df[time_col] >= ho_lo) & (df[time_col] < ho_hi)].copy()
+
+    train_mask = pd.Series(False, index=df.index)
+    for q in valid_quarters:
+        if q == holdout_quarter:
+            continue
+        lo, hi = _quarter_bounds(*q)
+        train_mask |= (df[time_col] >= lo) & (df[time_col] < hi)
+    train = df[train_mask].copy()
+
+    return train, holdout

@@ -103,6 +103,35 @@ def air_density_correct_speed(wind_speed, air_density, standard: float = STANDAR
 
 
 def estimate_power_kw(wind_speed, air_density, turbine: str):
-    """turbine: "vestas_v126" 또는 "unison_u136". 공기밀도 보정 후 커브 조회, kW(=1시간 kWh) 반환."""
+    """turbine: "vestas_v126" 또는 "unison_u136". 공기밀도 보정 후 커브 조회, kW(=1시간 kWh) 반환.
+
+    주의: 이 값은 터빈 "1기" 기준이다. 그룹 전체 발전량(y, 설비용량 capacity
+    kWh 기준)과 스케일을 맞추려면 estimate_group_power_kwh()를 쓸 것 —
+    16번 섹션에서 이 함수를 스케일 보정 없이 단일 feature로만 추가했을 때는
+    문제가 되지 않았지만(트리 모델은 feature의 절대 스케일과 무관하게 분할
+    임계값을 학습), y와 직접 뺄셈/비교가 필요한 물리 앵커링(잔차 타깃 등)
+    용도로 쓰려면 반드시 그룹 스케일로 맞춰야 한다.
+    """
     v_std = air_density_correct_speed(wind_speed, air_density)
     return _LOOKUPS[turbine](v_std)
+
+
+# group_id -> 터빈 1기 정격출력(kW). CAPACITY_KWH[group]/이 값 = 그룹 내 터빈 대수.
+TURBINE_RATED_KW = {"vestas_v126": VESTAS_V126_RATED_KW_DEPLOYED, "unison_u136": 4200.0}
+
+
+def n_turbines(group_id: int, capacity_kwh: float) -> float:
+    """그룹 설비용량(capacity_kwh)과 터빈 1기 정격출력으로부터 그룹 내 터빈 대수를 역산."""
+    turbine = TURBINE_BY_GROUP[group_id]
+    return capacity_kwh / TURBINE_RATED_KW[turbine]
+
+
+def estimate_group_power_kwh(wind_speed, air_density, group_id: int, capacity_kwh: float):
+    """그룹 전체 발전량(y와 동일 스케일, kWh) 기준 물리 파워커브 추정치.
+
+    estimate_power_kw()(터빈 1기 기준)에 그룹 내 터빈 대수를 곱한 값 —
+    y - estimate_group_power_kwh(...) 같은 직접적인 잔차 계산에 쓸 수 있다.
+    """
+    turbine = TURBINE_BY_GROUP[group_id]
+    per_turbine = estimate_power_kw(wind_speed, air_density, turbine)
+    return per_turbine * n_turbines(group_id, capacity_kwh)

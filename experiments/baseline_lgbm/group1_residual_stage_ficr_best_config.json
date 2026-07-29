@@ -1,0 +1,14 @@
+{
+  "threshold": 0.8,
+  "stage2_params": {
+    "n_estimators": 250,
+    "learning_rate": 0.020848515717753067,
+    "num_leaves": 3,
+    "min_child_samples": 5,
+    "feature_fraction": 0.9755356312397868,
+    "bagging_fraction": 0.7417558733101804,
+    "reg_alpha": 0.006779029436290187,
+    "reg_lambda": 0.002171430158772276
+  },
+  "note": "28번 섹션: FICR objective stage-1 기준 stage2_params Optuna 재탐색(239 trials, 3-fold LOYO). threshold=0.80은 그대로(이미 최적, 60~100% 2-tier 분리/예보불일치+풍향 sin-cos feature 추가 모두 LOYO에서 기각). LOYO delta(vs L2 baseline) +0.0068->+0.0088. 주의: 3-fold에 239 trial은 과적합 위험이 있어 실 제출로 최종 확인 필요."
+}

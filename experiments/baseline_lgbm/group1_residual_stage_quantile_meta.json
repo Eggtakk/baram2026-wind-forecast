@@ -3,14 +3,14 @@
   "recipe": "physics",
   "threshold": 0.8,
   "stage2_params": {
-    "n_estimators": 250,
-    "learning_rate": 0.020848515717753067,
-    "num_leaves": 3,
-    "min_child_samples": 5,
-    "feature_fraction": 0.9755356312397868,
-    "bagging_fraction": 0.7417558733101804,
-    "reg_alpha": 0.006779029436290187,
-    "reg_lambda": 0.002171430158772276
+    "n_estimators": 350,
+    "learning_rate": 0.011995677266504091,
+    "num_leaves": 44,
+    "min_child_samples": 56,
+    "feature_fraction": 0.8702195292233068,
+    "bagging_fraction": 0.5526119560862884,
+    "reg_alpha": 0.0028803406871160445,
+    "reg_lambda": 0.0026865860457581567
   },
   "stage1_feature_cols": [
     "ldaps_heightAboveGround_10_10u",
@@ -328,5 +328,5 @@
   "n_regime_train": 2428,
   "n_train_rows": 25919,
   "oof_splits": 3,
-  "stage1_objective_type": "ficr_shaped"
+  "stage1_objective_type": "quantile"
 }

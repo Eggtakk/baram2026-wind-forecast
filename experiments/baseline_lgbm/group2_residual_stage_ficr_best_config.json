@@ -1,14 +1,14 @@
 {
   "threshold": 0.6,
   "stage2_params": {
-    "n_estimators": 360,
-    "learning_rate": 0.010257651134023802,
-    "num_leaves": 27,
-    "min_child_samples": 6,
-    "feature_fraction": 0.983959162857576,
-    "bagging_fraction": 0.6510904379247652,
-    "reg_alpha": 8.707589843722637,
-    "reg_lambda": 0.48490608260891527
+    "n_estimators": 110,
+    "learning_rate": 0.012406615575217746,
+    "num_leaves": 50,
+    "min_child_samples": 14,
+    "feature_fraction": 0.7586292888125129,
+    "bagging_fraction": 0.43286029932975656,
+    "reg_alpha": 0.6715896022533289,
+    "reg_lambda": 0.008965962469055944
   },
-  "note": "27번 섬션: FICR objective로 stage-1이 바뀌면서 regime threshold의 최적점도 0.65->0.60으로 이동(LOYO delta +0.0116->+0.0132, FICR 0.4182->0.4217, NMAE 거의 불변 0.1304->0.1307). stage2_params는 기존 oof3 튜닝값 그대로 재사용(재탐색 안 함)."
+  "note": "28번 섹션: FICR objective stage-1 + threshold=0.60 기준 stage2_params Optuna 재탐색(70 trials, 3-fold LOYO). LOYO mean 0.6455->0.6503(3/3 폴드 개선). 60~100% 2-tier 분리/예보불일치+풍향 sin-cos feature 추가는 모두 기각. 이전(27번 섹션) stage2_params는 group1_residual_stage_best_config_oof3.json의 L2 stage-1 시절 튜닝값을 threshold만 바꿔 재사용한 것이었음 — 이번에 처음으로 stage2 하이퍼파라미터 자체도 FICR stage-1 기준으로 재탐색."
 }

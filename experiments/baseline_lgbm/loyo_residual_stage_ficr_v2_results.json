@@ -1,0 +1,26 @@
+[
+  {
+    "group_id": 2,
+    "holdout_year": 2022,
+    "score": 0.6516086160771515,
+    "ficr_v2_stage1_only_score": 0.6191162116767628,
+    "threshold": 0.65,
+    "n_regime_train": 3930
+  },
+  {
+    "group_id": 2,
+    "holdout_year": 2023,
+    "score": 0.6425088953344733,
+    "ficr_v2_stage1_only_score": 0.6255781216588936,
+    "threshold": 0.65,
+    "n_regime_train": 4069
+  },
+  {
+    "group_id": 2,
+    "holdout_year": 2024,
+    "score": 0.6609654214059937,
+    "ficr_v2_stage1_only_score": 0.6565727975226057,
+    "threshold": 0.65,
+    "n_regime_train": 4293
+  }
+]

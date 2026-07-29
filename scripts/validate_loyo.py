@@ -94,6 +94,7 @@ def run_fold(
     model_type: str = "lightgbm",
     model_params: dict | None = None,
     extra_feature_fn=None,
+    seed: int = 42,
 ) -> dict:
     """주어진 그룹 전체 df에서 holdout_year를 떼어내 1개 폴드를 학습/평가한다.
 
@@ -145,14 +146,14 @@ def run_fold(
     if model_type == "xgboost":
         import xgboost as xgb
 
-        model = xgb.XGBRegressor(**params, random_state=42, tree_method="hist", verbosity=0)
+        model = xgb.XGBRegressor(**params, random_state=seed, tree_method="hist", verbosity=0)
     elif model_type == "catboost":
         import catboost as cb
 
-        model = cb.CatBoostRegressor(**params, random_seed=42, verbose=False)
+        model = cb.CatBoostRegressor(**params, random_seed=seed, verbose=False)
     else:
         bagging_freq = 1 if params.get("bagging_fraction", 1.0) < 1.0 else 0
-        model = lgb.LGBMRegressor(**params, random_state=42, bagging_freq=bagging_freq, verbosity=-1)
+        model = lgb.LGBMRegressor(**params, random_state=seed, bagging_freq=bagging_freq, verbosity=-1)
 
     model.fit(train_feat[feature_cols], train_feat["y"])
 

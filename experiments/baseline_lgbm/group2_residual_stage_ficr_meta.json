@@ -3,14 +3,14 @@
   "recipe": "full",
   "threshold": 0.6,
   "stage2_params": {
-    "n_estimators": 360,
-    "learning_rate": 0.010257651134023802,
-    "num_leaves": 27,
-    "min_child_samples": 6,
-    "feature_fraction": 0.983959162857576,
-    "bagging_fraction": 0.6510904379247652,
-    "reg_alpha": 8.707589843722637,
-    "reg_lambda": 0.48490608260891527
+    "n_estimators": 110,
+    "learning_rate": 0.012406615575217746,
+    "num_leaves": 50,
+    "min_child_samples": 14,
+    "feature_fraction": 0.7586292888125129,
+    "bagging_fraction": 0.43286029932975656,
+    "reg_alpha": 0.6715896022533289,
+    "reg_lambda": 0.008965962469055944
   },
   "stage1_feature_cols": [
     "ldaps_heightAboveGround_10_10u",
